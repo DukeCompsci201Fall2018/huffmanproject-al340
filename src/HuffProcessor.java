@@ -66,7 +66,10 @@ public class HuffProcessor {
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		if (root == null) return;
 		if (root.myLeft == null & root.myRight == null) {
+			out.writeBits(1, 1);
 			out.writeBits(BITS_PER_WORD + 1, root.myValue);
+			return;
+			
 		}
 		out.writeBits(1, 0);
 		writeHeader(root.myLeft, out);
@@ -84,6 +87,9 @@ public class HuffProcessor {
 		if (root == null) return;
 		if (root.myLeft == null && root.myRight == null) {
 			encodings[root.myValue] = path;
+			if (myDebugLevel >= DEBUG_HIGH) {
+				System.out.printf("encoding for %d is %s\n", root.myValue, path);
+			}
 			return;
 		}
 		codingHelper(root.myLeft, path + "0", encodings);
@@ -102,28 +108,39 @@ public class HuffProcessor {
 		while (pq.size() > 1) {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
-			HuffNode t = new HuffNode(left.myValue + right.myValue, left.myWeight + right.myWeight, left, right);
+			HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
 			pq.add(t);
 		}
-		HuffNode root = pq.remove();
-		
 		if (myDebugLevel >= DEBUG_HIGH) {
-			System.out.printf("pq created with %d nodes/n", pq.size());
+			System.out.printf("pq created with %d nodes\n", pq.size());
 		}
+		
+		HuffNode root = pq.remove(); 
 		return root;
 	}
 
+	int[] freq = new int[ALPH_SIZE + 1];
+	
 	private int[] readForCounts(BitInputStream in) {
-		int[] freq = new int[ALPH_SIZE + 1];
+		//int[] freq = new int[ALPH_SIZE + 1];
 		int bits = in.readBits(BITS_PER_WORD);
+		freq[PSEUDO_EOF] = 1;
 		if (bits == -1) {
+			for (int k = 0; k < freq.length; k++) {
+				if (freq[k] != 0) {
+					if (myDebugLevel >= DEBUG_HIGH) {
+						System.out.printf("freq for %d is %s\n", k, freq[k]);
+					}
+				}
+			}
 			return freq;
 		}
-		else {
-			freq[bits] += 1;
-			readForCounts(in);
-		}
-		freq[PSEUDO_EOF] = 1;
+		
+		freq[bits] += 1;
+		
+		
+		readForCounts(in);
+		
 		return freq;
 	}
 
