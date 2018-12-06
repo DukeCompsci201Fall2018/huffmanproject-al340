@@ -140,15 +140,15 @@ public class HuffProcessor {
 	
 	private int[] readForCounts(BitInputStream in) {
 		int bits = in.readBits(BITS_PER_WORD);
-		freq[PSEUDO_EOF] = 1;
 		if (bits == -1) {
-			for (int k = 0; k < freq.length; k++) {
-				if (freq[k] != 0) {
-					if (myDebugLevel >= DEBUG_HIGH) {
-						System.out.printf("freq for %d is %s\n", k, freq[k]);
-					}
-				}
-			}
+//			for (int k = 0; k < freq.length; k++) {
+//				if (freq[k] != 0) {
+//					if (myDebugLevel >= DEBUG_HIGH) {
+//						System.out.printf("freq for %d is %s\n", k, freq[k]);
+//					}
+//				}
+//			}
+			freq[PSEUDO_EOF] = 1;
 			return freq;
 		}
 		
