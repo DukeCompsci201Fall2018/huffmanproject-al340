@@ -56,11 +56,28 @@ public class HuffProcessor {
 	}
 	
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
-		int bits = in.readBits(BITS_PER_WORD);
-		String code = codings[bits];
-		out.writeBits(code.length(),  Integer.parseInt(code, 2));
-		code = codings[PSEUDO_EOF];
+		while (true) {
+			
+			int bits = in.readBits(BITS_PER_WORD);
+			
+			if (bits == -1) {
+				break;
+			}
+			String code = codings[bits];
+			out.writeBits(code.length(),  Integer.parseInt(code, 2));
+			
+			
+			
+			if (myDebugLevel >= DEBUG_HIGH) {
+				System.out.printf("%d wrote %d for %d bits\n", bits, Integer.parseInt(code, 2), code.length());
+			}
+		}
+		String code = codings[PSEUDO_EOF];
 		out.writeBits(code.length(), Integer.parseInt(code, 2));
+		
+		if (myDebugLevel >= DEBUG_HIGH) {
+			System.out.printf("wrote %d for %d bits PSEUDO_EOF\n", Integer.parseInt(code, 2), code.length());
+		}
 	}
 
 	private void writeHeader(HuffNode root, BitOutputStream out) {
@@ -69,7 +86,6 @@ public class HuffProcessor {
 			out.writeBits(1, 1);
 			out.writeBits(BITS_PER_WORD + 1, root.myValue);
 			return;
-			
 		}
 		out.writeBits(1, 0);
 		writeHeader(root.myLeft, out);
@@ -79,6 +95,7 @@ public class HuffProcessor {
 	private String[] makeCodingsFromTree(HuffNode root) {
 		String[] encodings = new String[ALPH_SIZE + 1];
 		codingHelper(root, "", encodings);
+		
 		return encodings;
 	}
 
@@ -104,16 +121,16 @@ public class HuffProcessor {
 				pq.add(new HuffNode(k, counts[k], null, null));
 			}
 		}
-		
+		if (myDebugLevel >= DEBUG_HIGH) {
+			System.out.printf("pq created with %d nodes\n", pq.size());
+		}
 		while (pq.size() > 1) {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
 			HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
 			pq.add(t);
 		}
-		if (myDebugLevel >= DEBUG_HIGH) {
-			System.out.printf("pq created with %d nodes\n", pq.size());
-		}
+	//	pq.add(new HuffNode(PSEUDO_EOF, counts[PSEUDO_EOF], null, null));
 		
 		HuffNode root = pq.remove(); 
 		return root;
