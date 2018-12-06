@@ -136,11 +136,13 @@ public class HuffProcessor {
 		return root;
 	}
 
-	int[] freq = new int[ALPH_SIZE + 1];
+	
 	
 	private int[] readForCounts(BitInputStream in) {
-		int bits = in.readBits(BITS_PER_WORD);
-		if (bits == -1) {
+		int[] freq = new int[ALPH_SIZE + 1];
+		while (true) {
+			int bits = in.readBits(BITS_PER_WORD);
+			if (bits == -1) {
 //			for (int k = 0; k < freq.length; k++) {
 //				if (freq[k] != 0) {
 //					if (myDebugLevel >= DEBUG_HIGH) {
@@ -148,14 +150,14 @@ public class HuffProcessor {
 //					}
 //				}
 //			}
-			freq[PSEUDO_EOF] = 1;
-			return freq;
+				break;
+			}
+			freq[bits] += 1;
 		}
-		
-		freq[bits] += 1;
-		readForCounts(in);
+		freq[PSEUDO_EOF] = 1;
 		return freq;
 	}
+		
 
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
